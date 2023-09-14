@@ -11,6 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Functions
 
+This document is modified from Chapter 2 of [Advanced R](http://adv-r.had.co.nz/memory.html) by Hadley Wickham (second edition; licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+## Getting started
+
 To understand functions in R you need to internalise two important ideas:
 
 * Functions can be broken down into three components: arguments, body, and environment.
@@ -45,7 +49,14 @@ body(f02)
 environment(f02)
 ```
 
-I'll draw functions as in the following diagram. The black dot on the left is the environment. The two blocks to the right are the function arguments. I won't draw the body, because it's usually large, and doesn't help you understand the shape of the function.
+You can view the source code for non-primitive functions in R by printing the function as an object. The `getAnywhere()` function is helpful when you don't know which namespace a function is in.
+```{r}
+getAnywhere("cor")
+
+mean # primitive function
+```
+
+We will draw functions as in the following diagram. The black dot on the left is the environment. The two blocks to the right are the function arguments. I won't draw the body, because it's usually large, and doesn't help you understand the shape of the function.
 
 ```{r, echo = FALSE, out.width = NULL}
 knitr::include_graphics("../diagrams/functions/components.png")

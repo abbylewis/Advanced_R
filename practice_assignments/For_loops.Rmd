@@ -13,7 +13,7 @@ Several exercises for practicing for loops, primarily drawn from [R-bloggers](ht
 
 ## Exercise 1
 
-Write a for loop that iterates over the numbers 1 to 7 and prints the cube of each number using `print()`.
+Write a for loop that iterates over the numbers 1 to 7 and stores the cube of each number in `output`.
 
 ```{r}
 #output <- ??? #how long do you want the output to be? Can you create a vector of that length?
