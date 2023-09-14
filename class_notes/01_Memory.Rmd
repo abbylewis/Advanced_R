@@ -290,14 +290,14 @@ knitr::include_graphics("../diagrams/name-value/l-modify-2.png")
 To see values that are shared across lists, use `lobstr::ref()`. `ref()` prints the memory address of each object, along with a local ID so that you can easily cross-reference shared components.
 
 ```{r ref}
-ref(l1, l2)
+lobstr::ref(l1, l2)
 ```
 
 Note that the location of the list itself is different (and therefore `tracemem()` will show a copy) unless the entire list is the same.
 
 ```{r ref2}
 l3 <- l1
-ref(l1, l2, l3)
+lobstr::ref(l1, l2, l3)
 ```
 
 ### Data frames
@@ -346,7 +346,7 @@ You can request that `ref()` show these references by setting the `character` ar
 
 ```{r char}
 x <- c("a", "a", "abc", "d")
-ref(x, character = TRUE)
+lobstr::ref(x, character = TRUE)
 ```
 
 ### Exercises
