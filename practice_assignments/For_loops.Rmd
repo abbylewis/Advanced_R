@@ -38,7 +38,7 @@ iris
 
 ## Exercise 3
 
-Using a for loop simulate the flip a coin twenty times, keeping track of the individual outcomes (1 = heads, 0 = tails) in a vector that you preallocte.
+Using a for loop simulate the flip a coin twenty times, keeping track of the individual outcomes (1 = heads, 0 = tails) in a vector that you preallocate.
 
 ```{r}
 sample(c("heads","tails"),1)
