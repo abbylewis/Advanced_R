@@ -15,7 +15,25 @@ This document is modified from Chapter 2 of [Advanced R](http://adv-r.had.co.nz/
 
 ## Why functions
 
-By this point, you are probably already very familiar with using functions that other people have written. Being able to write your own functions will help you reduce duplication in your code and isolate separate components of your data analysis workflow. This unit provides an in-depth exploration of how functions work in R.
+By this point, you are probably already very familiar with using functions that other people have written (i.e., functions built into R and in R packages). Being able to write your own functions will help you reduce duplication in your code and isolate separate components of your data analysis workflow. This unit provides an in-depth exploration of how functions work in R.
+
+### Example
+
+Generate two sample datasets
+```{r}
+set.seed(1014) # Set seed controls random number generation, allowing for consistent results
+# 1 Generate dataset with -99 as NA
+df1 <- data.frame(replicate(6, sample(c(1:10, -99), 6, rep = TRUE))) 
+names(df1) <- letters[1:6] # Assign column names
+# 2 Generate dataset with -999 as NA
+df2 <- data.frame(replicate(6, sample(c(1:10, -999), 6, rep = TRUE))) # Generate dataset
+names(df2) <- letters[1:6] # Assign column names
+```
+
+Switch numeric missing values to NA
+```{r}
+
+```
 
 ### Function components
 
