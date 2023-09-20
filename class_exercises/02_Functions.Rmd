@@ -64,11 +64,11 @@ environment(f02)
 You can view the source code for non-primitive functions in R by printing the function as an object. The `getAnywhere()` function is helpful when you don't know which namespace a function is in.
 
 ```{r}
-cor #non-primitive function
+cor # non-primitive function
 
 sum # primitive function
 
-getAnywhere("cor") #alternative way of accessing source code
+getAnywhere("cor") # alternative way of accessing source code
 ```
 
 ### Exercises
@@ -76,11 +76,11 @@ getAnywhere("cor") #alternative way of accessing source code
 1. Let's practice writing functions! Write a function to calculate the standard deviation of a vector. Recall that standard deviation is the square root of the variance of the data. 
 
 ```{r}
-data <- c(1, 5, 2, 6, 8)
-#STEP 1: First, calculate the standard deviation of these data outside of a function
+data <- c(1, 5, 2, 6, 8, 4, 2, 6, 7)
+#STEP 1: First, calculate the standard deviation of these data outside of a function (without using the built-in `sd()` function)
 
-#STEP 2: Now, paste that code in the body of the function. Make sure you use the argument name `x` instead of data
-stdev <- function (x) {
+#STEP 2: Now, paste that code in the body of the function.
+stdev <- function (data) {
   # BODY
 }
 
