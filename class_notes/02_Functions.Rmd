@@ -49,31 +49,30 @@ df2$f[df2$f == -999] <- NA
 
 # OPTION 2: For loops
 for(column in colnames(df1)){
-  fixed_values <- df1[column] #isolate column
+  fixed_values <- df1[[column]] #isolate column
   fixed_values[fixed_values== -99] <- NA #replace NAs
   df1[column] <- fixed_values
 }
 
 for(column in colnames(df2)){
-  fixed_values <- df2[column]
+  fixed_values <- df2[[column]]
   fixed_values[fixed_values== -999] <- NA
   df2[column] <- fixed_values
 }
 
 # OPTION 3: function
-fix_nas <- function(df, na_val) { # Specify parameters ("formals")
-  # BODY (essentially the same as for loop)
-  for(column in colnames(df)){
-    fixed_values <- df[column]
-    fixed_values[fixed_values == na_val] <- NA
-    df[column] <- fixed_values
+# Function
+fix_nas <- function(df, vals) {
+  for (column in colnames(df)) {
+    fixed_values <- df[[column]] #Save this column as a vector
+    fixed_values[fixed_values %in% vals] <- NA #Replace val with NA
+    df[column] <- fixed_values #Fill in the original dataframe
   }
-  # Return output
-  return(df)
+  df
 }
 
-fix_nas(df1, -99)
-fix_nas(df2, -999)
+fix_nas(df1, c(-99,-999))
+fix_nas(df2, c(-99,-999))
 ```
 
 ### Function components
