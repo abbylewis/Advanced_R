@@ -342,6 +342,7 @@ You can request that `ref()` show these references by setting the `character` ar
 ```{r char}
 x <- c("a", "a", "abc", "d")
 ref(x, character = TRUE)
+
 x2 <- c("1", "2", "abc", "3")
 ref(x2, character = TRUE)
 ```
@@ -398,6 +399,7 @@ obj_size(y)-obj_size(x)
 
 ```{r size3}
 obj_size(list(NULL, NULL, NULL))
+obj_size(list(NA, NA, NA))
 ```
 
 If you're running 32-bit R, you'll see slightly different sizes.
