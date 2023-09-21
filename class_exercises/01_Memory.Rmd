@@ -342,6 +342,8 @@ You can request that `ref()` show these references by setting the `character` ar
 ```{r char}
 x <- c("a", "a", "abc", "d")
 ref(x, character = TRUE)
+x2 <- c("1", "2", "abc", "3")
+ref(x2, character = TRUE)
 ```
 
 ### Exercises

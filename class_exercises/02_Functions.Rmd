@@ -279,9 +279,7 @@ y
 
 The same rules apply if a function is defined inside another function. First, R looks inside the current function. Then, it looks where that function was defined (and so on, all the way up to the global environment). Finally, it looks in other loaded packages. 
 
-Run the following code in your head, then confirm the result by running the code.[^answer2]
-
-[^answer2]: `g04()` returns `c(1, 2, 3)`.
+Run the following code in your head, then confirm the result by running the code.
 
 ```{r, results = "hide"}
 x <- 1
@@ -947,10 +945,7 @@ While everything that happens in R is a result of a function call, not all calls
 
 While there are four forms, you actually only need one because any call can be written in prefix form. I'll demonstrate this property, and then you'll learn about each of the forms in turn.
 
-### Rewriting to prefix form {#prefix-transform}
-\index{'@\texttt{`}}
-\index{backticks|see {\texttt{`}}}
-\indexc{sapply()}
+### Rewriting to prefix form
 
 An interesting property of R is that every infix, replacement, or special form can be rewritten in prefix form. Doing so is useful because it helps you better understand the structure of the language, it gives you the real name of every function, and it allows you to modify those functions for fun and profit.
 
