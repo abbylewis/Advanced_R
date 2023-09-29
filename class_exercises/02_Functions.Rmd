@@ -190,7 +190,9 @@ As illustrated by the following chunk, arguments are matched by exact name, then
 k01 <- function(formal_one, formal_two, formal_three) {
   list(a = formal_one, b1 = formal_two, b2 = formal_three)
 }
+
 # Position
+k01(1, 2, 3)
 str(k01(1, 2, 3))
 
 # Exact name
@@ -218,7 +220,10 @@ Infix functions get their name from the fact the function name comes inbetween i
 Defining your own infix function is simple. You create a two argument function and bind it to a name that starts and ends with `%`:
 
 ```{r}
-`%+%` <- function(a, b) paste0(a, b)
+`%+%` <- function(a, b) {
+  paste0(a, b)
+}
+
 "new " %+% "string"
 ```
 
@@ -227,6 +232,7 @@ R's default precedence rules mean that infix operators are composed left to righ
 ```{r}
 `%-%` <- function(a, b) paste0("(", a, " %-% ", b, ")")
 "a" %-% "b" %-% "c"
+
 ```
 
 ### Replacement functions 
@@ -265,7 +271,7 @@ If your replacement function needs additional arguments, place them between `x` 
   x
 }
 # x is currently c(1, 6, 3, 4, 5, 6, 7, 8, 9, 10)
-modify(x, 1) <- 10
+modify(x, 1) <- 10L
 x
 ```
 
@@ -316,6 +322,7 @@ y <- 2
 #Infix form
 x + y
 #Prefix form:
+`+`(x, y)
 
 ###
 df <- data.frame(matrix(rnorm(100), ncol = 3))
@@ -324,6 +331,7 @@ names(df) <- c("x", "y", "z")
 #Prefix form for assignment
 `names<-`(df, c("x", "y", "z")) 
 df #df is unchanged, because there is really another step here
+`<-`(df, `names<-`(df, c("x", "y", "z")))
 ```
 
 Surprisingly, in R, `for` can be called like a regular function! The same is true for basically every operation in R.
@@ -370,7 +378,7 @@ plus_1 <- function(x) {
   x + 1
 }
 
-plus_1() #test
+plus_1(2) #test
 ```
 
 *   Explicitly, by calling `return()`:
@@ -381,7 +389,7 @@ plus_1_return <- function(x) {
   return(output)
 }
 
-plus_1_return() #test
+plus_1_return(2) #test
 ```
 
 ### Errors
@@ -389,12 +397,20 @@ plus_1_return() #test
 If a function cannot complete its assigned task, it should throw an error with `stop()`, which immediately terminates the execution of the function.
 
 ```{r, error = TRUE}
-j05 <- function() {
-  stop("I'm an error")
-  return(10)
+j05 <- function(input) {
+  if (input<0){
+    stop("Negative")
+  }
+  
+  message("Not negative!")
+  #warning("I might be an error?")
+  #stop("I'm an error")
+  return(log(input))
 }
 
-j05()
+j05(3)
+j05(-1)
+log(-1)
 ```
 
 An error indicates that something has gone wrong, and forces the user to deal with the problem. Some languages (like C, Go, and Rust) rely on special return values to indicate problems, but in R you should always throw an error. 
@@ -873,3 +889,4 @@ modify(get("x"), 1) <- 10
 9. Create infix versions of the set functions `intersect()`, `union()`, and
    `setdiff()`. You might call them `%n%`, `%u%`, and `%/%` to match 
    conventions from mathematics.
+   
