@@ -174,6 +174,37 @@ g12()
 
 The problem and its solution reveal why this seemingly undesirable behaviour exists: R relies on lexical scoping to find _everything_, from the obvious, like `mean()`, to the less obvious, like `+` or even `{`. This gives R's scoping rules a rather beautiful simplicity.
 
+### Debugging
+
+Because functions are their own environment, it can be hard to figure out why code fails. `browser()` helps to address this. Here is just a taste of `browser()`. The debugging chapter of the Wickham book provides more info.
+
+```{r}
+g11 <- function(x) {
+  browser()
+  return(log(x))
+}
+
+g11("12")
+```
+
+* Next, `n`: executes the next step in the function. If you have a
+  variable named `n`, you'll need `print(n)` to display its value.
+
+* Step into, ![](screenshots/step-into.png){width=20} or `s`: 
+  works like next, but if the next step is a function, it will step into that
+  function so you can explore it interactively.
+
+* Finish, ![](screenshots/finish-loop.png){width=20} or `f`: 
+  finishes execution of the current loop or function.
+
+* Continue, `c`: leaves interactive debugging and continues regular execution
+  of the function. This is useful if you've fixed the bad state and want to
+  check that the function proceeds correctly.
+
+* Stop, `Q`: stops debugging, terminates the function, and returns to the global
+  workspace. Use this once you've figured out where the problem is, and you're
+  ready to fix it and reload the code.
+
 ### Exercises
 
 1. What does the following code return? Why? Describe how each of the three
