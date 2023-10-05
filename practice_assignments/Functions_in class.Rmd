@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+3. Add documentation to your function in the `roxygen2` format
 
 ### Intermediate
 
