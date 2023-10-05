@@ -179,12 +179,14 @@ The problem and its solution reveal why this seemingly undesirable behaviour exi
 Because functions are their own environment, it can be hard to figure out why code fails. `browser()` helps to address this. Here is just a taste of `browser()`. The debugging chapter of the Wickham book provides more info.
 
 ```{r}
-g11 <- function(x) {
-  browser()
-  return(log(x))
+g13 <- function(x) {
+  z <- x + 2
+  char <- paste0("x + 2 is ", z)
+  output <- paste0("Log(x + 2) is ", log(char))
+  return()
 }
 
-g11("12")
+g13(12)
 ```
 
 * Next, `n`: executes the next step in the function. If you have a
