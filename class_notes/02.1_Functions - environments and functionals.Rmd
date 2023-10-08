@@ -22,11 +22,12 @@ Here we'll discuss __scoping__, the act of finding the value associated with a n
 For example, what will the following code return, 10 or 20?
 
 ```{r, results = "hide"}
-x <- 10
 g01 <- function() {
   x <- 20
   x
 }
+
+x <- 10
 
 g01()
 ```
@@ -121,6 +122,9 @@ g10 <- function() {
   g09(g09)
 }
 g10()
+
+sum <- 5+7
+sum(c(sum, 3))
 ```
 
 For the record, using the same name for different things is confusing and best avoided!
@@ -152,7 +156,7 @@ Lexical scoping determines where, but not when to look for values. R looks for v
 
 ```{r}
 g12 <- function() {x + 1}
-x <- 15
+x <- 20
 g12()
 
 #What if we change x?
@@ -183,8 +187,8 @@ Because functions are their own environment, it can be hard to figure out why co
 g13 <- function(x) {
   z <- x + 2
   char <- paste0("x + 2 is ", z)
-  output <- paste0("Log(x + 2) is ", log(char))
-  return()
+  output <- paste0("Log(x + 2) is ", log(z))
+  return(output)
 }
 
 g13(12)
@@ -245,6 +249,7 @@ h01 <- function(x) {
   #what happens if we put x in the body?
   return(10)
 }
+
 h01(stop("This is an error!"))
 ```
 
@@ -333,6 +338,17 @@ Developing strong code documentation habits will help *you* and others use the f
 Once the function definition exists, put your cursor somewhere in it and do Code > Insert Roxygen Skeleton to get a great head start on the roxygen comment.
 
 ```{r}
+#' This is a function that does something!
+#'
+#' @param x name 
+#' @param y date
+#' @param z 
+#'
+#' @return a list of x, y, and z
+#' @export
+#'
+#' @examples
+#' 
 some_function <- function(x, y, z) {
   return(list(x, y, z))
 }
@@ -445,7 +461,7 @@ fix_nas(df1, c(-99,-999))
 fix_nas(df2, c(-99,-999))
 
 #OPTION 4: functional
-#map(list(dfs), function, vals)
+str(map(list(df1, df2), fix_nas, c(-99,-999)))
 
 ```
 
