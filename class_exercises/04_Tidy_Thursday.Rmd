@@ -87,7 +87,7 @@ We're going to use "Tidy Tuesday" dataset of the week (https://github.com/rforda
 ### Tidy Tuesday: taylor's version
 
 ```{r}
-install.packages("taylor")
+#install.packages("taylor")
 library(taylor)
 ```
 
@@ -166,6 +166,21 @@ taylor_album_songs %>%
   summarize(mean_danceability = mean(danceability, na.rm = T),
             sd_danceability = sd(danceability, na.rm = T)) %>% #this is the only line we are changing
   arrange(mean_danceability)
+```
+
+You can also pair `group_by()` with `mutate()` to keep the dataframe the same length, while running calculations within a group
+
+```{r}
+z_score <- function(x){
+  score <- (x - mean(x, na.rm = T))/sd(x, na.rm = T)
+  return(score)
+}
+
+#To assess the mean within each album
+taylor_album_songs %>%
+  group_by(album_name) %>%
+  mutate(z_danceability = z_score(danceability)) %>% #this calculates z_score within each album
+  select(album_name, track_name, z_danceability)
 ```
 
 ## ggplot2
@@ -258,13 +273,49 @@ taylor_album_songs %>%
 
 By breaking the data down in this way we can see that the positive relationship between valence and energy is fairly consistent across all albums.
 
+### Joins (`full_join()`, `left_join()`, `right_join()`)
+
+Let's add the data from `taylor_albums` to assess whether danceability affects how the album is rated
+
+First, look at the data
+
+```{r}
+taylor_albums
+```
+
+Then, add album info to summary stats and plot
+
+```{r}
+# Danceability means and sd calculated above
+dance_means <- taylor_album_songs %>%
+  group_by(album_name) %>%
+  summarize(mean_danceability = mean(danceability, na.rm = T),
+            sd_danceability = sd(danceability, na.rm = T)) %>% #this is the only line we are changing
+  arrange(mean_danceability) 
+
+# Join album info by album name (this is new)
+dance_mean_plot <- dance_means %>%
+  left_join(taylor_albums, by = "album_name")
+
+# Generate plot
+dance_mean_plot %>%
+  ggplot(aes(y = user_score, x = mean_danceability))+
+  geom_point() +
+  geom_errorbar(aes(xmin = mean_danceability - sd_danceability, 
+                    xmax = mean_danceability + sd_danceability))
+```
+
 # Activity
 
 The rest of the class period is yours to explore data analysis and visualization with the Taylor Swift data. If you are new to tidyverse and ggplot you can reference the techniques throughout this document. If you are already proficient in these techniques, I recommend checking out other resources including the the `ggh4x` package (https://cran.rstudio.com/web/packages/ggh4x/index.html), the `gg_plotly()` function from the `plotly` library, and `gganimate` (https://gganimate.com/) to explore new skills. 
+
+One especially interesting direction to explore may be the actual lyrics from her songs, which are stored as tibbles within the dataframe
+
+```{r}
+taylor_album_songs$lyrics[1]
+```
 
 You can find inspiration from recently-shared posts here:
 https://twitter.com/hashtag/TidyTuesday?src=hashtag_click&f=live
 
 I'm excited to see what you develop!
-
-
