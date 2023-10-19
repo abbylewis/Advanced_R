@@ -167,3 +167,104 @@ taylor_album_songs %>%
             sd_danceability = sd(danceability, na.rm = T)) %>% #this is the only line we are changing
   arrange(mean_danceability)
 ```
+
+## ggplot2
+
+Another key feature of the tidyverse is the plotting capabilities. "ggplots" are easy to make with a consistent syntax. Let's break down the structure of a ggplot:
+
+Step 1: create the plot with `ggplot()`
+
+```{r}
+taylor_album_songs %>%
+  ggplot() #creates an empty plot
+```
+
+Step 2: add "aesthetics" (axes, color scales, etc).
+
+```{r}
+taylor_album_songs %>%
+  #ggplot(aes(x = ___, y = ___))
+```
+
+Step 3: Add data to the plot!
+
+Within ggplot, we use the plus sign to add new elements to the plot
+
+```{r}
+taylor_album_songs %>%
+  #ggplot(aes(x = ___, y = ___))+
+  geom_point()
+```
+
+Step 4: Customize!
+
+More resources available here: http://www.sthda.com/english/articles/32-r-graphics-essentials/125-ggplot-cheat-sheet-for-great-customization/
+
+```{r}
+taylor_album_songs %>%
+  #ggplot(aes(x = ___, y = ___))+
+  geom_point() +
+  xlab() +
+  ylab() +
+  theme_bw()
+```
+
+## Combining data analysis with ggplot
+
+```{r}
+# Danceability means and sd calculated above
+dance_means <- taylor_album_songs %>%
+  group_by(album_name) %>%
+  summarize(mean_danceability = mean(danceability, na.rm = T),
+            sd_danceability = sd(danceability, na.rm = T)) %>% #this is the only line we are changing
+  arrange(mean_danceability) 
+
+# Generate plot
+dance_means %>%
+  ggplot(aes(y = album_name, x = mean_danceability))+
+  geom_point() +
+  geom_errorbar(aes(xmin = mean_danceability - sd_danceability, 
+                    xmax = mean_danceability + sd_danceability))
+```
+
+### Adding color
+
+Let's explore how valence, energy, and danceability are related. First we'll plot valence vs energy, then add danceability as color
+
+```{r}
+taylor_album_songs %>%
+  ggplot(aes(x = valence, y = energy)) +
+  geom_point(aes(color = danceability))
+
+# The taylor package also provides taylor-themed colors
+taylor_album_songs %>%
+  ggplot(aes(x = valence, y = energy)) +
+  geom_point(aes(color = danceability)) + 
+  scale_color_taylor_c(album = "evermore")
+  #scale_color_taylor_c(album = "Lover")
+```
+
+### Small multiples
+
+Part of the power of ggplot is that it makes it really easy to add "small multiples" --> separate panels that break your data down into manageable chunks. You do this using `facet_wrap()` and `facet_grid()`
+
+```{r}
+taylor_album_songs %>%
+  ggplot(aes(x = valence, y = energy)) +
+  geom_point(aes(color = danceability)) + 
+  scale_color_taylor_c(album = "evermore") +
+  facet_wrap(~album_name)
+```
+
+By breaking the data down in this way we can see that the positive relationship between valence and energy is fairly consistent across all albums.
+
+# Activity
+
+The rest of the class period is yours to explore data analysis and visualization with the Taylor Swift data. If you are new to tidyverse and ggplot you can reference the techniques throughout this document. If you are already proficient in these techniques, I recommend checking out other resources including the the `ggh4x` package (https://cran.rstudio.com/web/packages/ggh4x/index.html), the `gg_plotly()` function from the `plotly` library, and `gganimate` (https://gganimate.com/) to explore new skills. 
+
+You can find inspiration from recently-shared posts here:
+https://twitter.com/hashtag/TidyTuesday?src=hashtag_click&f=live
+
+I'm excited to see what you develop!
+
+
