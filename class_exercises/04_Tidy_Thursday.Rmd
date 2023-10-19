@@ -1,0 +1,169 @@
+---
+title: "04_Tidy_Thursday"
+author: "Abby Lewis"
+date: "2023-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tidyverse (Tidy Thursday)
+
+Welcome to the tidyverse! The tidyverse is a collection of packages for data science in R. All packages share an underlying design philosophy, grammar, and data structures. 
+
+They can all be loaded by running `library(tidyverse)`
+
+```{r}
+library(tidyverse)
+```
+
+To see all of the packages in the tidyverse you can use the function `tidyverse_packages()`. Some of these likely seem familiar (e.g., we have worked with purrr, and you may be familiar with ggplot), while others are more niche
+
+```{r}
+tidyverse_packages()
+```
+
+Each of these packages could also be loaded independently, but loading everything in the tidyverse gives you access to a comprehensive suite of data analysis tools
+
+## Getting started with syntax: the magrittr pipe operator
+
+One of the key features of tidyverse code is the magrittr pipe operator, %>%. The pipe operator functions by passing whatever is on the left hand side of the pipe to the first argument of the function call on the right. 
+
+(recall: what do we call this type of function?)
+
+For example:
+
+```{r}
+rep("hello", 4) 
+#could be re-written as 
+"hello" %>% rep(4)
+```
+
+You can also use a `.` to indicate where in the function (on the right) the input should go. For example:
+
+```{r}
+"hello" %>% rep(4)
+#is the same as
+"hello" %>% rep(., 4)
+
+#this returns an error because 4 is passed to the first argument of rep, pushing "hello" to the second argument
+4 %>% rep("hello")
+#instead you should write:
+4 %>% rep("hello", .)
+```
+
+Pipes can be chained together to create a cohesive workflow:
+
+```{r}
+#Non-pipe workflow:
+intermediate <- rep(1:10, 3)
+sum(intermediate)
+
+#Pipe
+1:10 %>% rep(3) %>% sum()
+#Orienting vertically makes workflow especially clear
+```
+
+The pipe operator now also exists in base R, where it is written `|>`. The same concepts apply.
+
+## Tidyverse verbs
+
+There are several key functions that will often show up in a tidyverse workflow:
+* `filter()`: subset rows of data
+* `select()`: subset columns of data
+* `rename()`: rename a column of data
+* `mutate()`: add or modify a column of data
+* `summarize()`: calculate summary statistics
+* `arrange()`: sort data based on specified 
+* `group_by()`: used with summarize and mutate to run calculations within "groups" of data
+* `pivot_longer()` and `pivot_wider()`: increase or decrease the number of columns/rows of data
+
+To demonstrate, we need an example dataset.
+
+We're going to use "Tidy Tuesday" dataset of the week (https://github.com/rfordatascience/tidytuesday)—Taylor Swift.
+
+### Tidy Tuesday: taylor's version
+
+```{r}
+install.packages("taylor")
+library(taylor)
+```
+
+There are three main data sets. 
+
+* `taylor_album_songs` includes all songs from her albums
+* `taylor_all_songs` includes all of the songs in taylor_album_songs plus EPs, individual singles, and the original versions of albums that have been re-released as Taylor’s Version
+* `taylor_albums` summarizes Taylor’s album release history
+
+More information here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-10-17/readme.md
+
+```{r}
+taylor_album_songs
+```
+
+### `filter()`
+
+Say we only wanted the songs with featured artists. We could use `filter()` to identify those rows in the dataset
+
+```{r}
+taylor_album_songs %>%
+  filter(!is.na(featuring))
+
+#Remember that this is the same as writing
+filter(taylor_album_songs, !is.na(featuring))
+```
+
+### `select()`
+
+The dataset above is still somewhat hard to view because there are 29 columns of data. Let's look at just album_name, featuring, duration, and Spotify's "acousticness" metric (1.0 represents high confidence the track is acoustic)
+
+```{r}
+taylor_album_songs %>%
+  filter(!is.na(featuring)) %>%
+  select(album_name, featuring, duration_ms, acousticness)
+```
+
+You can see from this example how the tidy verbs work nicely together, walking through a data analysis workflow. That is, it is clear that your first step was to filter to only tracks with featured artists, and your second step was to select the columns you wanted.
+
+### `mutate()`
+
+The table above is more interpretable, but ms is not a super helpful to interpret the length of the song. Let's convert to minutes using `mutate()`
+
+```{r}
+taylor_album_songs %>%
+  filter(!is.na(featuring)) %>%
+  select(album_name, featuring, duration_ms, acousticness) %>%
+  mutate(duration_min = duration_ms/1000/60) %>% #convert to minutes
+  select(-duration_ms) #no longer need the ms version
+```
+
+### `group_by()` and `summarize()`
+
+Say we wanted to assess the average "danceability" of Taylor Swift albums. We do this for all albums using `summarize()`
+
+```{r}
+#To assess the mean across the entire dataset
+taylor_album_songs %>%
+  summarize(mean_danceability = mean(danceability, na.rm = T))
+```
+
+Or we could group by album to get album specific means. Here, I am also using `arrange()` to sort by mean danceability
+
+```{r}
+#To assess the mean within each album
+taylor_album_songs %>%
+  group_by(album_name) %>%
+  summarize(mean_danceability = mean(danceability, na.rm = T)) %>%
+  arrange(mean_danceability) #use arrange to sort by danceability
+```
+
+We can also add another column in our summarize call. For example, it would be helpful to have a sense of the variation around these means:
+```{r}
+taylor_album_songs %>%
+  group_by(album_name) %>%
+  summarize(mean_danceability = mean(danceability, na.rm = T),
+            sd_danceability = sd(danceability, na.rm = T)) %>% #this is the only line we are changing
+  arrange(mean_danceability)
+```

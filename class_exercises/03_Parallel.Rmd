@@ -42,15 +42,17 @@ Use map() to fit linear models to the mtcars dataset using the formulas stored i
 list:
 
 ```{r}
+mtcars
+
 formulas <- list(
   mpg ~ disp,
   mpg ~ I(1 / disp),
   mpg ~ disp + wt,
   mpg ~ I(1 / disp) + wt)
 
-purrr::map(#first argument to function 
-           #function 
-           #other arguments to pass to function
+purrr::map(formulas, #first argument to function 
+           lm, #function 
+           data = mtcars#other arguments to pass to function
            )
 ```
 
