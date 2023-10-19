@@ -413,3 +413,15 @@ You can find inspiration from recently-shared posts here:
 https://twitter.com/hashtag/TidyTuesday?src=hashtag_click&f=live
 
 I'm excited to see what you develop!
+
+Ideas to get you started:
+* How have album ratings changed over time?
+* How has the use of certain words changed over time?
+* Does the key of the music relate to the energy rating? Or other properties of the song?
+* Are there distinctive traits about the first or last track in each album?
+
+```{r}
+taylor_album_songs
+taylor_albums
+```
+
