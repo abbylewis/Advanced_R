@@ -305,15 +305,109 @@ dance_mean_plot %>%
                     xmax = mean_danceability + sd_danceability))
 ```
 
+### Lyrics
+
+The final column of data includes tibbles with the words to each song. Let's use these lyrics to identify relevant songs to play in class (i.e., songs that contain words like "plot", "data", etc., which are guaranteed to be hits)
+
+First, look at the data
+
+```{r}
+taylor_album_songs$lyrics[[1]] #First song, for example
+```
+
+We can calculate the number of lyrics in which a given word appears using grepl
+
+```{r}
+lyrics_df <- taylor_album_songs$lyrics[[1]] #isolate the df we are working with
+n_times <- sum(grepl("data|plot|chart|graph|number|analysis|code", lyrics_df$lyric))
+n_times
+```
+
+We now need to do this for all songs, so let's turn this into a function and incorporate into our tidy data analysis
+
+```{r}
+# Function to find the # of times a given word is used in multiple dataframes of lyrics
+find_word <- function(lyric_df_list, word){
+  output <- numeric(length(lyric_df_list))
+  for(i in 1:length(lyric_df_list)){
+    lyrics_df <- lyric_df_list[[i]]
+    n_times <- sum(grepl(word, lyrics_df$lyric))
+    output[i] <- n_times
+  }
+  return(output)
+}
+
+taylor_album_songs %>%
+  mutate(n_relevant = find_word(lyrics, "data|plot|chart|graph|number|analysis|code")) %>%
+  arrange(-n_relevant) %>%
+  filter(n_relevant > 0)
+```
+
+Success! We now have a class playlist!
+
+We can use this same function to identify other text. For example, how often do different colors show up in the lyrics?
+
+```{r}
+taylor_album_songs %>%
+  mutate(n_red = find_word(lyrics, "red"),
+         n_ora = find_word(lyrics, "orange"),
+         n_yel = find_word(lyrics, "yellow"),
+         n_gre = find_word(lyrics, "green"),
+         n_blu = find_word(lyrics, "blue"),
+         n_pur = find_word(lyrics, "purple"),
+         n_whi = find_word(lyrics, "white"),
+         n_bla = find_word(lyrics, "black"),
+         n_gol = find_word(lyrics, "gold"),
+         n_sil = find_word(lyrics, "silver")) %>%
+  summarize(sum_red = sum(n_red),
+            sum_ora = sum(n_ora),
+            sum_yel = sum(n_yel),
+            sum_gre = sum(n_gre),
+            sum_blu = sum(n_blu),
+            sum_pur = sum(n_pur),
+            sum_whi = sum(n_whi),
+            sum_bla = sum(n_bla),
+            sum_gol = sum(n_gol),
+            sum_sil = sum(n_sil))
+```
+
+If we wanted to graph the relative frequency of these words, we would need all x-axis information (i.e., color names) to be in one column. We can do that using `pivot_longer()`
+
+```{r}
+colors_pivot <- taylor_album_songs %>%
+  mutate(red = find_word(lyrics, "red"),
+         orange = find_word(lyrics, "orange"),
+         yelllow = find_word(lyrics, "yellow"),
+         green = find_word(lyrics, "green"),
+         blue = find_word(lyrics, "blue"),
+         purple = find_word(lyrics, "purple"),
+         white = find_word(lyrics, "white"),
+         black = find_word(lyrics, "black"),
+         gold = find_word(lyrics, "gold"),
+         silver = find_word(lyrics, "silver")) %>%
+  pivot_longer(cols = red:silver, names_to = "color", values_to = "n")
+
+colors_pivot %>%
+  ggplot(aes(x = color, y = n)) +
+  geom_col()
+```
+
+### Plot customization
+
+Let's use `scale_fill_manual()` to color each bar according to the color name
+
+```{r}
+colors_pivot %>%
+  ggplot(aes(x = color, y = n, fill = color)) +
+  geom_col() +
+  scale_fill_manual(breaks = c("red", "orange", "yellow", "green", "blue", "purple", "white", "black", "gold", "silver"),
+                    values = c("red", "orange", "yellow", "green", "blue", "purple", "white", "black", "gold", "grey"))
+```
+
+
 # Activity
 
 The rest of the class period is yours to explore data analysis and visualization with the Taylor Swift data. If you are new to tidyverse and ggplot you can reference the techniques throughout this document. If you are already proficient in these techniques, I recommend checking out other resources including the the `ggh4x` package (https://cran.rstudio.com/web/packages/ggh4x/index.html), the `gg_plotly()` function from the `plotly` library, and `gganimate` (https://gganimate.com/) to explore new skills. 
-
-One especially interesting direction to explore may be the actual lyrics from her songs, which are stored as tibbles within the dataframe
-
-```{r}
-taylor_album_songs$lyrics[1]
-```
 
 You can find inspiration from recently-shared posts here:
 https://twitter.com/hashtag/TidyTuesday?src=hashtag_click&f=live
