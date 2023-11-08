@@ -1,0 +1,181 @@
+---
+title: "05_Shiny"
+author: "Abby Lewis"
+date: "2023-10-27"
+output: html_document
+---
+
+# Shiny Apps 101
+
+Shiny apps are interactive web applications built in R. Using Shiny apps can be a nice way to share your work with others, through dashboards, interactive visualizations, etc.
+
+This tutorial will provide the basics of how to build a Shiny app. For more information, check out the [Shiny website](https://shiny.posit.co/).
+
+## Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(shiny)
+library(tidyverse)
+```
+
+Here's a basic Shiny app to illustrate how the framework works
+```{r}
+# The UI is where you specify what you want the user to see
+ui <- fluidPage(
+  "Hello, world!"
+)
+
+#The server is where you put behind-the-scenes code that contributes to the UI
+server <- function(input, output, session) {
+}
+
+#Running shinyApp creates the application using the ui and server
+shinyApp(ui, server)
+```
+
+Lets get some data to work with. Here, I'm using tidytuesday bird counts
+```{r}
+feederwatch <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-10/PFW_2021_public.csv')
+site_data <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-10/PFW_count_site_data_public_2021.csv')
+species_translator <- readr::read_csv('https://feederwatch.org/wp-content/uploads/2022/08/PFW-species-translation-table.csv')
+
+#Add date to feederwatch
+feederwatch$Date <- as.Date(paste0(feederwatch$Year, "-", feederwatch$Month, "-", feederwatch$Day))
+```
+
+Before we turn this into an application, let's take a look at the data structure ourself
+```{r}
+feederwatch
+site_data
+species_translator
+```
+
+Quick visualization to see what we're working with
+```{r}
+#Add common names to feederwatch
+feederwatch <- feederwatch %>%
+  left_join(species_translator)
+
+#How many observations of each species
+feederwatch %>%
+  group_by(species_code, american_english_name) %>%
+  summarize(total = sum(how_many, na.rm = T)) 
+
+feederwatch %>%
+  group_by(species_code, american_english_name) %>%
+  summarize(total = sum(how_many, na.rm = T)) %>%
+  filter(total > 10000) %>% #Lets only look at birds that are really abundant
+  ggplot(aes(x = total, y = american_english_name)) +
+  geom_col() + 
+  theme(axis.title.y = element_blank()) #supress y axis title
+```
+
+Let's add this figure to our application
+```{r}
+ui <- fluidPage(
+  "Plot of total abundance",
+  #Add plot
+  plotOutput("plot")
+  )
+
+server = function(input, output, session) {
+  #Generate plot on the server side
+  output$plot <- renderPlot({
+    #Copied and pasted figure code from above (no edits needed!)
+    feederwatch %>%
+      group_by(species_code, american_english_name) %>%
+      summarize(total = sum(how_many, na.rm = T)) %>%
+      filter(total > 10000) %>% 
+      ggplot(aes(x = total, y = american_english_name)) +
+      geom_col() + 
+      theme(axis.title.y = element_blank()) 
+    })
+}
+
+shinyApp(ui, server)
+```
+
+Dark eyed juncos are the most abundant bird in the dataset. Let's look at how frequently they are observed at different sites
+
+The dataset only includes indications of where species _were_ observed, and does not explicitly specify where they were not observed. Let's do some data processing to calculate presence across the different sites.
+```{r}
+#First, explicitly fill in NAs in the dataset. We want all combinations of sites and species
+loc_id <- rep(unique(feederwatch$loc_id), 
+             times = length(unique(feederwatch$species_code)))
+species_code <- rep(unique(feederwatch$species_code), 
+               each = length(unique(feederwatch$loc_id)))
+NA_filled_sites <- data.frame(loc_id, species_code) 
+
+#Then, re-add the bird observation data
+NA_filled_data <- NA_filled_sites %>% 
+  left_join(feederwatch %>% 
+              select(loc_id, species_code, how_many)) 
+
+#And calculate whether the bird has been observed at each site 
+#(this will take a few seconds)
+presence <- NA_filled_data %>%
+  group_by(loc_id, species_code) %>%
+  summarize(n = sum(how_many, na.rm = T),
+            present = n > 0 & !is.na(n)) 
+
+#Fill in lat/long for plot
+presence_latlong <- presence %>%
+  left_join(feederwatch %>% 
+              select(loc_id, latitude, longitude) %>%
+              unique())
+
+#Add common names
+presence_latlong <- presence_latlong %>%
+  left_join(species_translator)
+```
+
+Now we're ready to plot!
+```{r}
+#Plot
+presence_latlong %>%
+  filter(species_code == "daejun") %>% #
+  ggplot(aes(x = longitude, y = latitude)) +
+  #Plotting points in two steps so presence is on top of absence
+  geom_point(aes(fill = present), 
+             shape = 21, #outlined circle
+             alpha = 0.2, #make absences transparent
+             data = . %>% filter(!present)) + 
+  geom_point(aes(fill = present), 
+             shape = 21,
+             data = . %>% filter(present)) +
+  scale_fill_manual(values = c("white", "blue"))
+```
+
+This is nice, but what if we want to look at other species? Let's add it to our app!
+```{r}
+ui <- fluidPage(
+  #Add drop down menu for species
+  selectInput("species_name", "Select species", 
+              choices = unique(feederwatch$american_english_name)),
+  
+  #Add plot
+  plotOutput("plot")
+)
+
+server = function(input, output, session) {
+  output$plot <- renderPlot({
+    
+    presence_latlong %>%
+      filter(american_english_name == input$species_name) %>%
+      ggplot(aes(x = longitude, y = latitude)) +
+      #Plotting points in two steps so presence is on top of absence
+      geom_point(aes(fill = present), 
+                 shape = 21, #outlined circle
+                 alpha = 0.2, #make absences transparent
+                 data = . %>% filter(!present)) + 
+      geom_point(aes(fill = present), 
+                 shape = 21,
+                 data = . %>% filter(present)) +
+      scale_fill_manual(values = c("white", "blue")) +
+      ggtitle(input$species_name)
+    
+    })
+}
+
+shinyApp(ui, server)
+```
