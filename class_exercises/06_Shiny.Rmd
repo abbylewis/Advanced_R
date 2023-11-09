@@ -2,12 +2,11 @@
 title: "05_Shiny"
 author: "Abby Lewis"
 date: "2023-10-27"
-output: html_document
 ---
 
-# Shiny Apps 101
+# Shiny Apps 101 (Advanced Interactive Visualizations in R)
 
-Shiny apps are interactive web applications built in R. Using Shiny apps can be a nice way to share your work with others, through dashboards, interactive visualizations, etc.
+Shiny apps are interactive web applications built in R. Using Shiny apps can be a nice way to share your work with others, both within and outside of academia. 
 
 This tutorial will provide the basics of how to build a Shiny app. For more information, check out the [Shiny website](https://shiny.posit.co/).
 
@@ -23,6 +22,39 @@ library(tidyverse)
 ## Basic Shiny app
 
 Here's a basic Shiny app to illustrate how the framework works
+```{r}
+# The UI is where you specify what you want the user to see
+ui <- fluidPage(
+  titlePanel("Basic Shiny App"), #Title
+  
+  selectInput(inputId = "stored_value", #Drop-down menu
+              label = "This is a drop-down menu", 
+              choices = c("Option 1", "Option 2", "Option 3")),
+  
+  textOutput(outputId = "text")
+)
+
+#The server is where you put behind-the-scenes code that contributes to the UI
+server <- function(input, output, session) {
+  
+  output$text <- renderText({
+    paste0("You selected: ", input$stored_value)
+  })
+  
+}
+
+#Running shinyApp creates the application using the ui and server
+shinyApp(ui, server)
+```
+
+## Your turn!
+
+Let's practice modifying a basic Shiny app.
+
+Customize this UI to include a different control widget (i.e., replacing `selectInput()`). 
+
+For more information on what control widgets are available in Shiny, you'll want to use [this reference](https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/).
+
 ```{r}
 # The UI is where you specify what you want the user to see
 ui <- fluidPage(
@@ -50,7 +82,7 @@ shinyApp(ui, server)
 
 ## Birds!
 
-Lets get some data to work with. Here, I'm using tidytuesday bird counts
+To make a more interesting app, we'll need data. Here, I'm using tidytuesday bird counts.
 
 ```{r}
 feederwatch <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-10/PFW_2021_public.csv')
@@ -178,6 +210,24 @@ plot <- feederwatch %>%
 ggplotly(plot)
 ```
 
+We can also customize the way text shows up when you hover by modifying the text argument in `aes()`, and adding `tooptip = "text"` to `ggplotly()`.
+
+```{r}
+plot <- feederwatch %>%
+  group_by(species_code, american_english_name, scientific_name) %>%
+  summarize(total = sum(how_many, na.rm = T)) %>%
+  ungroup() %>%
+  top_n(10, total) %>% 
+  ggplot(aes(x = total, y = american_english_name, 
+             #Add text aesthetic to show how text shows up on hover
+             text = paste0("Scientific name: ", scientific_name, 
+                           "\nTotal: ", total))) +
+  geom_col() + 
+  theme(axis.title.y = element_blank())
+
+ggplotly(plot, tooltip = "text") #Add tooltip argument
+```
+
 To incorporate this into a shiny app, we use `plotlyOutput()` in the UI, and `renderPlotly()` in the server.
 
 ```{r}
@@ -197,15 +247,17 @@ server = function(input, output, session) {
   output$plot <- renderPlotly({
 
     plot <- feederwatch %>%
-      group_by(species_code, american_english_name) %>%
+      group_by(species_code, american_english_name, scientific_name) %>%
       summarize(total = sum(how_many, na.rm = T)) %>%
       ungroup() %>%
       top_n(input$n, total) %>% #Add input$n here
-      ggplot(aes(x = total, y = american_english_name)) +
+      ggplot(aes(x = total, y = american_english_name, 
+             text = paste0("Scientific name: ", scientific_name, 
+                           "\nTotal: ", total))) +
       geom_col() + 
       theme(axis.title.y = element_blank())
     
-    ggplotly(plot)
+    ggplotly(plot, tooltip = "text")
 })
 }
 
@@ -218,8 +270,8 @@ Dark eyed juncos are the most observed bird in the dataset. Let's look at how fr
 
 To do so wil require a good bit of work. Here are the steps:
 1. Calculate whether dark eyed juncos have been observed at each site (practice data wrangling)
-2. Create a basic plot (practice with ggplot syntax)
-3. Turn our basic plot into a pretty map (practice making maps in R)
+2. Create a basic ggplot (practice with ggplot syntax)
+3. Turn our basic plot into a map (practice making maps in R)
 4. Add the map to a Shiny App, adding interactivity (practice with Shiny)
 
 ### Step 1: Calculate presence
@@ -281,7 +333,7 @@ presence_latlong %>%
   scale_fill_manual(values = c("white", "blue"))
 ```
 
-This is nice, but a pretty bad looking map. Let's use the sf package to make it better.
+This is nice, but a pretty bad looking map. Let's use the `sf` package to make it better.
 
 ### Step 3: Pretty map!
 
@@ -311,7 +363,7 @@ Here I am layering state boundaries on top of country boundaries to also include
 ggplot() +
   geom_sf(data = world) + #Add country boundaries
   geom_sf(data = states) + #Add state boundaries
-  coord_sf(expand = FALSE, ylim = c(23, 55), xlim = c(-130,-60))+
+  coord_sf(expand = FALSE, ylim = c(23, 55), xlim = c(-130,-60))+ #Trim to just the US/Canada
   geom_point(aes(fill = present, 
                  y = latitude, 
                  x = longitude), 
@@ -382,35 +434,9 @@ server = function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-## Your turn!
+## Practice exercise
 
-BEGINNER: Let's practice modifying a basic Shiny app, setting aside the data for now.
-
-Customize this UI to include different text (i.e., replacing "Hello, world!") and a different control widget (i.e., replacing `selectInput()`). The control widget won't do anything yet, but that's okay! This is just practice.
-
-For more information on what control widgets are available in Shiny, see [here](https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/).
-
-```{r}
-# The UI is where you specify what you want the user to see
-ui <- fluidPage(
-  "Hello, world!",
-  
-  selectInput("stored_value", "This is a drop-down menu", 
-              choices = c("Option 1", "Option 2")),
-)
-
-#The server is where you put behind-the-scenes code that contributes to the UI
-#No server specifications needed for this very basic application
-server <- function(input, output, session) {
-}
-
-#Running shinyApp creates the application using the ui and server
-shinyApp(ui, server)
-```
-
-INTERMEDIATE: I'm curious how the relative prevalence of different species changes across months of the year. 
-
-Modify this code to allow users to select what species they want on the plot. 
+I'm curious how the relative prevalence of different species changes across months of the year. Modify this code to allow users to select what species they want on the plot. 
 
 I've done the data wrangling for you in the code chunk below—you just need to fill in the shiny app details.
 
@@ -464,7 +490,7 @@ server = function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-ADVANCED:
+## Playground
 
 What are _you_ interested in? Create a Shiny app to explore the data using the space below.
 
