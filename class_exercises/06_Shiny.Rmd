@@ -11,7 +11,7 @@ Shiny apps are interactive web applications built in R. Using Shiny apps can be 
 
 This tutorial will provide the basics of how to build a Shiny app. For more information, check out the [Shiny website](https://shiny.posit.co/).
 
-In this tutorial, I will also give a little crash course on creating maps in R and creating interactive visualizations with plotly. For more mapping resources, [this](https://r-spatial.org/r/2018/10/25/ggplot2-sf.html) is my favorite reference.
+This lesson also includes a little crash course on creating maps in R and creating interactive visualizations with plotly. For more mapping resources, [this](https://r-spatial.org/r/2018/10/25/ggplot2-sf.html) is my favorite reference.
 
 ## Load packages
 ```{r setup, include=FALSE}
@@ -26,15 +26,22 @@ Here's a basic Shiny app to illustrate how the framework works
 ```{r}
 # The UI is where you specify what you want the user to see
 ui <- fluidPage(
-  "Hello, world!",
+  titlePanel("Basic Shiny App"), #Title
   
-  selectInput("stored_value", "This is a drop-down menu", 
+  selectInput(inputId = "stored_value", #Drop-down menu
+              label = "This is a drop-down menu", 
               choices = c("Option 1", "Option 2")),
+  
+  textOutput(outputId = "text")
 )
 
 #The server is where you put behind-the-scenes code that contributes to the UI
-#No server specifications needed for this very basic application
 server <- function(input, output, session) {
+  
+  output$text <- renderText({
+    paste0("You selected: ", input$stored_value)
+  })
+  
 }
 
 #Running shinyApp creates the application using the ui and server
@@ -44,6 +51,7 @@ shinyApp(ui, server)
 ## Birds!
 
 Lets get some data to work with. Here, I'm using tidytuesday bird counts
+
 ```{r}
 feederwatch <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-10/PFW_2021_public.csv')
 site_data <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-10/PFW_count_site_data_public_2021.csv')
@@ -54,6 +62,7 @@ feederwatch$Date <- as.Date(paste0(feederwatch$Year, "-", feederwatch$Month, "-"
 ```
 
 Before we turn this into an application, let's take a look at the data structure ourself
+
 ```{r}
 feederwatch
 site_data
@@ -61,21 +70,20 @@ species_translator
 ```
 
 Quick visualization to see what we're working with
+
 ```{r}
 #Add common names to feederwatch
 feederwatch <- feederwatch %>%
   left_join(species_translator)
 
 #How many observations of each species
-feederwatch %>%
+observations <- feederwatch %>%
   group_by(species_code, american_english_name) %>%
   summarize(total = sum(how_many, na.rm = T)) 
 
-feederwatch %>%
-  group_by(species_code, american_english_name) %>%
-  summarize(total = sum(how_many, na.rm = T)) %>%
+observations %>%
   ungroup() %>%
-  top_n(10, total) %>% #Lets only look at the top 10 most abundant birds 
+  top_n(10, total) %>% #Lets only look at the top 10 most observed birds 
   ggplot(aes(x = total, y = american_english_name)) +
   geom_col() + 
   theme(axis.title.y = element_blank())  #supress y axis title
@@ -83,13 +91,14 @@ feederwatch %>%
 
 ## Add data to shiny app
 
-To add this figure to our application, we add "plotOutput()" to the UI, and "output$plot <- renderPlot({})" to the server.
+To add this figure to our application, we add `plotOutput()` to the UI, and `output$plot <- renderPlot({})` to the server.
 
 Within renderPlot({}) we can paste the exact same figure code we used outside of the Shiny application
+
 ```{r}
 ui <- fluidPage(
   #Add title
-  titlePanel("Plot of total abundance"),
+  titlePanel("Plot of total observations"),
   
   #Add plot
   plotOutput("plot")
@@ -98,15 +107,9 @@ ui <- fluidPage(
 server = function(input, output, session) {
   #Generate plot on the server side
   output$plot <- renderPlot({
-    #Copied and pasted figure code from above (no edits needed!)
-    feederwatch %>%
-      group_by(species_code, american_english_name) %>%
-      summarize(total = sum(how_many, na.rm = T)) %>%
-      ungroup() %>%
-      top_n(10, total) %>%
-      ggplot(aes(x = total, y = american_english_name)) +
-      geom_col() + 
-      theme(axis.title.y = element_blank()) 
+    
+    #Copy and paste figure code from above (no edits needed!)
+    
     })
 }
 
@@ -115,24 +118,29 @@ shinyApp(ui, server)
 
 ### Add interactivity
 
-What if we want users to be able to control how many birds show up? We can add an interactive element
-* We do this by adding "sliderInput()" to the UI, and using "input$n" to control the number of birds in the plot in the server code
+What if we want users to be able to control how many birds show up?
+
+We do this by adding `sliderInput()` to the UI, and using `input$n` to control the number of birds in the plot in the server code
+
 ```{r}
 ui <- fluidPage(
   #Add title
-  titlePanel("Plot of total abundance"),
+  titlePanel("Plot of total observations"),
   
   #Add slider
-  sliderInput("n", "Number to plot", min = 3, max = 30, value = 10),
+  sliderInput(inputId = "n", 
+              label = "Number to plot", 
+              min = 3, max = 30, value = 10),
   
   #Add plot
   plotOutput("plot")
   )
 
 server = function(input, output, session) {
+  
   #Generate plot on the server side
   output$plot <- renderPlot({
-    #Copied and pasted figure code from above (no edits needed!)
+    
     feederwatch %>%
       group_by(species_code, american_english_name) %>%
       summarize(total = sum(how_many, na.rm = T)) %>%
@@ -141,6 +149,7 @@ server = function(input, output, session) {
       ggplot(aes(x = total, y = american_english_name)) +
       geom_col() + 
       theme(axis.title.y = element_blank()) 
+    
     })
 }
 
@@ -160,7 +169,7 @@ plot <- feederwatch %>%
   group_by(species_code, american_english_name) %>%
   summarize(total = sum(how_many, na.rm = T)) %>%
   ungroup() %>%
-  top_n(10, total) %>% #Lets only look at the top 10 most abundant birds 
+  top_n(10, total) %>% #Lets only look at the top 10 most observed birds 
   ggplot(aes(x = total, y = american_english_name)) +
   geom_col() + 
   theme(axis.title.y = element_blank())  #supress y axis title
@@ -169,13 +178,15 @@ plot <- feederwatch %>%
 ggplotly(plot)
 ```
 
-To incorporate this into a shiny app, I am using plotlyOutput() in the UI, and renderPlotly() in the server.
+To incorporate this into a shiny app, we use `plotlyOutput()` in the UI, and `renderPlotly()` in the server.
 
 ```{r}
 ui <- fluidPage(
-  titlePanel("Plot of total abundance"),
+  titlePanel("Plot of total observations"),
   
-  sliderInput("n", "Number to plot", min = 3, max = 30, value = 10),
+  sliderInput(inputId = "n", 
+              label = "Number to plot", 
+              min = 3, max = 30, value = 10),
   
   #plotlyOutput instead of plotOutput
   plotlyOutput("plot")
@@ -203,21 +214,30 @@ shinyApp(ui, server)
 
 ## Mapping
 
-Dark eyed juncos are the most abundant bird in the dataset. Let's look at how frequently they are observed at different sites
+Dark eyed juncos are the most observed bird in the dataset. Let's look at how frequently they are observed at different sites.
+
+To do so wil require a good bit of work. Here are the steps:
+1. Calculate whether dark eyed juncos have been observed at each site (practice data wrangling)
+2. Create a basic plot (practice with ggplot syntax)
+3. Turn our basic plot into a pretty map (practice making maps in R)
+4. Add the map to a Shiny App, adding interactivity (practice with Shiny)
+
+### Step 1: Calculate presence
 
 The dataset only includes indications of where species _were_ observed, and does not explicitly specify where they were not observed. Let's do some data processing to calculate presence across the different sites.
+
 ```{r}
 #First, explicitly fill in NAs in the dataset. We want all combinations of sites and species
 loc_id <- rep(unique(feederwatch$loc_id), 
-             times = length(unique(feederwatch$species_code)))
+             each = length(unique(feederwatch$species_code)))
 species_code <- rep(unique(feederwatch$species_code), 
-               each = length(unique(feederwatch$loc_id)))
+               times = length(unique(feederwatch$loc_id)))
 NA_filled_sites <- data.frame(loc_id, species_code) 
 
 #Then, re-add the bird observation data
 NA_filled_data <- NA_filled_sites %>% 
   left_join(feederwatch %>% 
-              select(loc_id, species_code, how_many)) 
+              select(loc_id, species_code, Date, how_many)) 
 
 #And calculate whether the bird has been observed at each site 
 #(this will take a few seconds)
@@ -227,15 +247,20 @@ presence <- NA_filled_data %>%
             present = n > 0 & !is.na(n)) 
 
 #Fill in lat/long for plot
+#Identify unique lat/long
+latlongs <- feederwatch %>% 
+  select(loc_id, latitude, longitude) %>%
+  unique()
+#Add to presence
 presence_latlong <- presence %>%
-  left_join(feederwatch %>% 
-              select(loc_id, latitude, longitude) %>%
-              unique())
+  left_join(latlongs)
 
 #Add common names
 presence_latlong <- presence_latlong %>%
   left_join(species_translator)
 ```
+
+### Step 2: Basic plot
 
 Now we're ready to plot!
 ```{r}
@@ -244,20 +269,23 @@ presence_latlong %>%
   filter(species_code == "daejun") %>% #Select the species we want
   ggplot(aes(x = longitude, y = latitude)) + #Using lat/long as x/y
   #Plotting points in two steps so presence is on top of absence
-  #Absence
-  geom_point(aes(fill = present), 
+  geom_point(data = . %>% filter(!present), #Absence
+             aes(fill = present), 
              shape = 21, #outlined circle
-             alpha = 0.2, #make absences transparent
-             data = . %>% filter(!present)) + 
-  #Presence
-  geom_point(aes(fill = present), 
-             shape = 21,
-             data = . %>% filter(present)) +
+             alpha = 0.2 #make absences transparent
+             ) + 
+  geom_point(data = . %>% filter(present), #Presence
+             aes(fill = present), 
+             shape = 21) +
   #Set colors
   scale_fill_manual(values = c("white", "blue"))
 ```
 
 This is nice, but a pretty bad looking map. Let's use the sf package to make it better.
+
+### Step 3: Pretty map!
+
+Load packages and base maps.
 
 ```{r}
 #Load packages
@@ -266,13 +294,19 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 
 #Load base maps
-states <- ne_states(returnclass = "sf",country = "United States of America")
+states <- ne_states(returnclass = "sf", country = "United States of America")
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 #Filter data for this species
 for_map <- presence_latlong %>%
       filter(species_code == "daejun")
+```
 
+Then, create plot.
+
+Here I am layering state boundaries on top of country boundaries to also include Canada. The rest of the code should look quite similar to the basic map we made above.
+
+```{r}
 #Create plot
 ggplot() +
   geom_sf(data = world) + #Add country boundaries
@@ -296,9 +330,11 @@ ggplot() +
     axis.title.y = element_blank())
 ```
 
-### Add to shiny app
+### Step 4: Add to Shiny App
 
-You know the drill- just paste into our existing shiny app framework! Only the parts that are dynamic need to be in the server—for the rest (e.g., base maps), it is sufficient we that created these above (i.e., they are in our global environment)
+You know the drill- just paste into our existing shiny app framework! 
+
+Only the parts that are dynamic need to be in the server—for the rest (e.g., base maps), it is sufficient we that they are in our global environment because we created these above.
 
 ```{r}
 ui <- fluidPage(
@@ -350,7 +386,9 @@ shinyApp(ui, server)
 
 BEGINNER: Let's practice modifying a basic Shiny app, setting aside the data for now.
 
-Customize this UI to include different text and a different selection interface. The selection interface won't do anything yet, but that's okay! This is just practice.
+Customize this UI to include different text (i.e., replacing "Hello, world!") and a different control widget (i.e., replacing `selectInput()`). The control widget won't do anything yet, but that's okay! This is just practice.
+
+For more information on what control widgets are available in Shiny, see [here](https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/).
 
 ```{r}
 # The UI is where you specify what you want the user to see
@@ -370,7 +408,11 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ```
 
-INTERMEDIATE: I'm curious how the relative prevalence of different species changes across months of the year. Can you modify this code to allow users to select what species they want on the plot? I've done the data wrangling for you in the code chunk below—you just need to fill in the shiny app details.
+INTERMEDIATE: I'm curious how the relative prevalence of different species changes across months of the year. 
+
+Modify this code to allow users to select what species they want on the plot. 
+
+I've done the data wrangling for you in the code chunk below—you just need to fill in the shiny app details.
 
 ```{r}
 #Data wrangling
@@ -408,7 +450,7 @@ server = function(input, output, session) {
   output$plot <- renderPlot({
     
     percent_per_month %>%
-      filter(american_english_name %in% XXX ) #(fill in this line to respond to the UI)
+      filter(american_english_name %in% XXX ) #(fill in XXX in this line to respond to the UI)
       ggplot(aes(x = Date, y = pct, color = american_english_name)) +
       geom_line()+
       labs(color = "Species") +
