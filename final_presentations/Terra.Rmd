@@ -1,0 +1,59 @@
+---
+title: "AdvancedR:Terra_Presentation"
+author: "AlisonRitz"
+date: "2023-11-14"
+output: html_document
+---
+
+First we will install and load the `terra` library.
+
+```{r}
+#install.packages('terra')
+library(terra)
+```
+
+Now, we must load a raster to work with. We will be using an example file that comes with the package.
+
+```{r}
+filename <- system.file("ex/meuse.tif", package = "terra")
+r <- rast(filename)
+```
+
+## 1: Plotting the Raster
+
+First we will plot the raster. Plotting the raster allows us to get an idea for the values associated with the raster and the extent of it before we do any further analysis.
+
+```{r}
+plot(r)
+```
+
+This `plot` function works like the `base R plot` so you can change the titles, labels, colors, etc. in the same way.
+
+We can also make the map interactive by using the `click` function along with `plot`. Now we can click on specific areas of the raster and get those pixel values. To do this we must open a separate plotting window. *Open an R Script for this. It will not work in Mark Down*
+
+```{r}
+# dev.new(noRStudioGD = TRUE)
+# plot(r)
+# click(r)
+```
+
+## 2: Changing the Extent of a raster with a bounding box coordinates
+
+This raster isn't so big but lets go ahead and look at a smaller area now that we know the extent values for X and Y. We will do this by creating a bounding box but you can also crop using shapefiles or other spatail polygons. One may do this becuase they only need the information in a set area or the file may be too big to run as one so it needs to be broken down into smaller sub areas. We will do this using the `ext` and the `crop` functions.
+
+For the `ext` function, the call goes `ext(xmin, xmax, ymin, ymax)`. `ext` tells the `crop` function what the bounding box coordinates are.
+
+```{r}
+e <- ext(178800, 179200, 329000, 331000)
+re <- crop(r, e)
+plot(re)
+```
+
+## 3: Manipulating the Raster Values
+
+Now that we have a smaller area to work with, we can see that we still have raster values ranging from about 300 to 1200. Lets change that value to a factor of 100 so the imagery will have vlaues of 3 to 12. This comes in handy when you need to make the file size smaller so you can change the bit size of the imagery. More information on that can be found here: <https://gisgeography.com/bit-depth/>
+
+```{r}
+rem <- re / 100
+plot(rem)
+```
