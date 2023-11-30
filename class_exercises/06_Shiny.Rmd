@@ -60,8 +60,8 @@ For more information on what control widgets are available in Shiny, you'll want
 ui <- fluidPage(
   titlePanel("Basic Shiny App"), #Title
   
-  selectInput(inputId = "stored_value", #Drop-down menu
-              label = "This is a drop-down menu", 
+  checkboxGroupInput(inputId = "stored_value", #Drop-down menu
+              label = "These are checkboxes!", 
               choices = c("Option 1", "Option 2")),
   
   textOutput(outputId = "text")
@@ -141,6 +141,12 @@ server = function(input, output, session) {
   output$plot <- renderPlot({
     
     #Copy and paste figure code from above (no edits needed!)
+    observations %>%
+      ungroup() %>%
+      top_n(10, total) %>% #Lets only look at the top 10 most observed birds 
+      ggplot(aes(x = total, y = american_english_name)) +
+      geom_col() + 
+      theme(axis.title.y = element_blank())  #supress y axis title
     
     })
 }
@@ -268,7 +274,7 @@ shinyApp(ui, server)
 
 Dark eyed juncos are the most observed bird in the dataset. Let's look at how frequently they are observed at different sites.
 
-To do so wil require a good bit of work. Here are the steps:
+To do so will require a good bit of work. Here are the steps:
 1. Calculate whether dark eyed juncos have been observed at each site (practice data wrangling)
 2. Create a basic ggplot (practice with ggplot syntax)
 3. Turn our basic plot into a map (practice making maps in R)

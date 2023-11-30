@@ -1,0 +1,202 @@
+---
+title: "Objects in R"
+subtitle: "Fun with time-series!"
+author: "Daniel Putnam"
+format: 
+  beamer:
+    theme: 'default'
+editor: visual
+---
+
+```{r}
+library(sloop)
+library(xts)
+```
+
+## Disclaimer
+
+I'm going to be talking about objects in R using time-series
+
+But please try out these methods on objects you frequently use
+
+You might be surprised to learn how objects you commonly use are structured and handled!
+
+## What are objects?
+
+In Object Oriented Programming, objects are the way that information is stored and how different data types interact with functions and with each other.
+
+Examples of objects :
+
+-   Data Frames
+
+-   Characters
+
+-   Time-series
+
+## Object classes
+
+1.  Typically objects belongs to a **Class**. This determines what the object is and what it can do.
+
+2.  Each specific thing you make is called an **instance** of a class.
+
+3.  Each class can hold data in **fields** sometimes called attributes
+
+## Example - Time Series
+
+```{r, echo=TRUE}
+csvData = read.csv(file = 'mineDisturbance.csv')
+
+aTimeSeries = ts(data = csvData[,2],
+                 start = c(1984,3),
+                 end = c(2022,3),
+                 frequency = 12
+                 )
+
+justNumbers = as.numeric(aTimeSeries)
+
+head(aTimeSeries)
+head(justNumbers)
+```
+
+## Example - Time Series
+
+```{r, echo=TRUE, fig.keep='high'}
+plot(aTimeSeries, 
+     ylab = 'NDVI', main = 'Surface Mining Disturbance')
+```
+
+## Example - Time Series
+
+```{r, echo = TRUE, fig.keep='high'}
+plot(justNumbers,
+     ylab = 'NDVI', main = 'Surface Mining Disturbance')
+```
+
+## Why did those plot differently? {.smaller}
+
+Objects are useful in R because it allows functions to be **polymorphic**
+
+This means that when you call a function, R will implement a different **method** depending on the type of object provided to the function call.
+
+User's don't need to worry about how R is handling different object types because they are **encapsulated** within a standard interface (a function call).
+
+## Why did those plot differently?
+
+When I call the **generic** `plot()` function and provide it an object of the class `ts` it implements the `ts` method for plotting, which you can find in the Rstudio help page of `plot.ts()`
+
+```{r, echo=TRUE}
+s3_dispatch(plot(aTimeSeries))
+s3_dispatch(plot(justNumbers))
+```
+
+## Generic vs method
+
+In general, you can differentiate generic functions and methods by looking for a "." in the function name.
+
+```{r, echo=TRUE}
+
+ftype(plot)
+ftype(plot.ts)
+```
+
+However this isn't always the case ... `data.frame()`
+
+## Object types
+
+There are a few relevant object types to know :
+
+-   Base objects (`"integer"`)
+
+-   Object-oriented objects
+
+    -   S3 (`"Date"`)
+
+    -   S4 (`"MLE"`)
+
+    -   R6 (??)
+
+What makes an object object-oriented is having a **class** and **attribute fields**
+
+Every object has a **base type**
+
+## What is a "time series" object?
+
+First, is a time series object a base object or an OO object?
+
+```{r, echo=TRUE}
+otype(aTimeSeries)
+
+class(aTimeSeries)
+
+attributes(aTimeSeries)
+
+typeof(aTimeSeries)
+```
+
+## Some objects might not be what they seem!
+
+```{r, echo=TRUE}
+startDate = time(aTimeSeries)[1]
+print(startDate)
+# NOT STORED AS A DATE
+
+startDate = as.Date("1984-03-01")
+attributes(startDate)
+typeof(startDate)
+
+# Number of days since 1970-1-1
+unclass(startDate)
+```
+
+## The end
+
+Questions?
+
+## Alternative to ts
+
+`ts` is a pretty basic object type without many features
+
+The `xts` package is much more flexible allowing :
+
+-   Irregular time series
+
+-   Date object indexing
+
+-   Allows custom attributes and events
+
+-   Allows date querying and subsetting
+
+```{r}
+firstDate = as.Date("1984-03-01")
+lastDate = as.Date("2022-03-01")
+dates = seq.Date(firstDate,lastDate,'month')
+```
+
+```{r, echo=TRUE}
+aTimeSeries_xts = xts(x = aTimeSeries, 
+                         order.by = dates,
+                         lc = 'Autumn Olive',
+                         )
+```
+
+## Alternative to ts
+
+```{r, echo=TRUE}
+otype(aTimeSeries_xts)
+typeof(aTimeSeries_xts)
+class(unclass(aTimeSeries_xts))
+class(time(aTimeSeries_xts)[1])
+```
+
+## xts plotting
+
+```{r, fig.keep='high'}
+plot(aTimeSeries_xts, 
+     ylab = 'NDVI', main = 'Surface Mining Disturbance')
+```
+
+## xts plotting
+
+```{r, echo=TRUE}
+s3_dispatch(plot(aTimeSeries_xts))
+```
